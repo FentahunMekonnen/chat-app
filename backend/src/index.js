@@ -13,7 +13,7 @@ import { connectDB } from "./lib/db.js";
 import job from "./lib/cron.js";
 
 import clerkWebhook from "./webhooks/clerk.webhook.js";
-
+import authRoutes from "./routes/auth.route.js";
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -21,10 +21,12 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const publicDir = path.join(process.cwd(), "public");
 
-
 // it's important that you don't parse the webhook event data, it should be in the raw format
-app.use("/api/webhooks/clerk", express.raw({ type: "application/json" }), clerkWebhook);
-
+app.use(
+  "/api/webhooks/clerk",
+  express.raw({ type: "application/json" }),
+  clerkWebhook,
+);
 
 app.use(
   cors({
@@ -42,6 +44,8 @@ app.get("/health", (req, res) => {
   res.json({ message: "Hello from the API!" });
 });
 
+app.use("/api/auth", authRoutes);
+
 // if the public directory exists, serve the static files
 // this is for the production build
 if (fs.existsSync(publicDir)) {
@@ -52,13 +56,6 @@ app.get("/{*any}", (req, res, next) => {
   res.sendFile(path.join(publicDir, "index.html"), (err) => next(err));
 });
 
-// app.get("/{*any}", (req, res,next) => {
-//   if (fs.existsSync(publicDir)) {
-//     res.sendFile(path.join(publicDir, "index.html"));
-//   } else {
-//     res.status(404).json({ message: "Not Found" });
-//   }
-// });
 app.listen(PORT, () => {
   connectDB();
 
