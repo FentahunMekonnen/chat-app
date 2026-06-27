@@ -15,8 +15,7 @@ import job from "./lib/cron.js";
 import clerkWebhook from "./webhooks/clerk.webhook.js";
 import authRoutes from "./routes/auth.route.js";
 import MessageRoutes from "./routes/message.route.js";
-
-const app = express();
+import { app, server } from "./lib/socket.js";
 
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -24,6 +23,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const publicDir = path.join(process.cwd(), "public");
 
 // it's important that you don't parse the webhook event data, it should be in the raw format
+//REST app
 app.use(
   "/api/webhooks/clerk",
   express.raw({ type: "application/json" }),
@@ -59,7 +59,8 @@ app.get("/{*any}", (req, res, next) => {
   res.sendFile(path.join(publicDir, "index.html"), (err) => next(err));
 });
 
-app.listen(PORT, () => {
+// socket.io server application
+server.listen(PORT, () => {
   connectDB();
 
   console.log(`Server is running on port ${PORT}`);
